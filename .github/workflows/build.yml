@@ -20,30 +20,17 @@ jobs:
 
       - name: Extract Ritim project
         run: |
-          mkdir -p buildsrc
-          unzip -q Ritim-Android-Pla* -d buildsrc || true
-          echo "=== Dosya Yapısı ==="
-          find . -maxdepth 3 -not -path '*/.*'
+          unzip -q Ritim-Android-Pla* -d .
 
       - name: Build APK
         run: |
-          BUILD_DIR=$(find . -name "build.gradle*" -exec dirname {} \; | head -n 1)
-          if [ -z "$BUILD_DIR" ]; then
-            echo "build.gradle dosyası bulunamadı!"
-            exit 1
-          fi
-          echo "Proje dizini: $BUILD_DIR"
-          cd "$BUILD_DIR"
-          if [ -f "gradlew" ]; then
-            chmod +x gradlew
-            ./gradlew assembleDebug --stacktrace
-          else
-            gradle assembleDebug --stacktrace
-          fi
+          cd android
+          chmod +x gradlew 2>/dev/null || true
+          gradle assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: RitimPlayer-APK
-          path: /**/*.apk
+          path: android/app/build/outputs/apk/debug/*.apk
           
