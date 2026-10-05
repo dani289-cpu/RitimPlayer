@@ -15,19 +15,31 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Extract Ritim project
         run: |
           mkdir -p buildsrc
-          unzip -q Ritim-Android-Pla* -d buildsrc
+          unzip -q Ritim-Android-Pla* -d buildsrc || true
+          echo "=== Dosya Yapısı ==="
+          find . -maxdepth 3 -not -path '*/.*'
 
-      - name: Find and Build APK
+      - name: Build APK
         run: |
-          # gradlew dosyasının olduğu yeri bulup oraya geçiyoruz
-          GRADLE_DIR=$(find buildsrc -name "gradlew" -exec dirname {} \;)
-          echo "Gradle klasörü: $GRADLE_DIR"
-          cd "$GRADLE_DIR"
-          chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          BUILD_DIR=$(find . -name "build.gradle*" -exec dirname {} \; | head -n 1)
+          if [ -z "$BUILD_DIR" ]; then
+            echo "build.gradle dosyası bulunamadı!"
+            exit 1
+          fi
+          echo "Proje dizini: $BUILD_DIR"
+          cd "$BUILD_DIR"
+          if [ -f "gradlew" ]; then
+            chmod +x gradlew
+            ./gradlew assembleDebug --stacktrace
+          else
+            gradle assembleDebug --stacktrace
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
